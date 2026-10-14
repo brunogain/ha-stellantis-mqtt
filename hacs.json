@@ -1,7 +1,5 @@
 {
-    "name": "Stellantis Vehicles",
+    "name": "Stellantis Vehicles (MQTT broker mode)",
     "homeassistant": "2025.11.0",
-    "render_readme": true,
-    "zip_release": true,
-    "filename": "stellantis_vehicles.zip"
+    "render_readme": true
 }
