@@ -165,6 +165,18 @@ FIELD_NOTIFICATIONS = "notifications"
 FIELD_ANONYMIZE_LOGS = "anonymize_logs"
 FIELD_RECONFIGURE = "reconfigure"
 
+# Broker mode (broker.py): the vehicle comes from an MQTT broker fed by a poller.
+FIELD_BROKER_MODE = "broker_mode"
+FIELD_BROKER_HOST = "broker_host"
+FIELD_BROKER_PORT = "broker_port"
+FIELD_BROKER_PREFIX = "broker_prefix"
+FIELD_BROKER_USER = "broker_user"
+FIELD_BROKER_CA_FILE = "broker_ca_file"
+FIELD_BROKER_CERT_FILE = "broker_cert_file"
+FIELD_BROKER_KEY_FILE = "broker_key_file"
+FIELD_BROKER_PASSWORD = "broker_password"
+FIELD_BROKER_TLS = "broker_tls"
+
 PLATFORMS = [
     "binary_sensor",
     "button",

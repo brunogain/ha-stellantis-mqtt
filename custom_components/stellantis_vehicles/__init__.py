@@ -23,7 +23,8 @@ from .const import (
     PLATFORMS,
     OTP_FILENAME,
     FIELD_NOTIFICATIONS,
-    UPDATE_INTERVAL
+    UPDATE_INTERVAL,
+    FIELD_BROKER_MODE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +44,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
-    stellantis = StellantisVehicles(hass)
+    if config.data.get(FIELD_BROKER_MODE):
+        # Broker mode: the poller's MQTT broker instead of the Stellantis API (broker.py).
+        from .broker import StellantisBrokerVehicles
+        stellantis = StellantisBrokerVehicles(hass)
+    else:
+        stellantis = StellantisVehicles(hass)
     stellantis.save_config(config.data)
     stellantis.set_entry(config)
     await stellantis.scheduled_tokens_refresh()

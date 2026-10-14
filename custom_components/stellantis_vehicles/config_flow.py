@@ -28,6 +28,16 @@ from .const import (
     FIELD_NOTIFICATIONS,
     FIELD_ANONYMIZE_LOGS,
     FIELD_RECONFIGURE,
+    FIELD_BROKER_MODE,
+    FIELD_BROKER_HOST,
+    FIELD_BROKER_PORT,
+    FIELD_BROKER_PREFIX,
+    FIELD_BROKER_USER,
+    FIELD_BROKER_CA_FILE,
+    FIELD_BROKER_CERT_FILE,
+    FIELD_BROKER_KEY_FILE,
+    FIELD_BROKER_PASSWORD,
+    FIELD_BROKER_TLS,
     MQTT_REFRESH_TOKEN_TTL,
     OAUTH_CODE_URL,
     TRANSLATION_PLACEHOLDERS
@@ -45,8 +55,23 @@ def COUNTRY_SCHEMA(mobile_app):
     })
 
 OAUTH_MODE_SCHEMA = vol.Schema({
-        vol.Required(FIELD_OAUTH_MANUAL_MODE, default=False): bool
+        vol.Required(FIELD_OAUTH_MANUAL_MODE, default=False): bool,
+        vol.Required(FIELD_BROKER_MODE, default=False): bool
 })
+
+def BROKER_SCHEMA(defaults=None):
+    d = {FIELD_BROKER_PORT: 8883, FIELD_BROKER_PREFIX: "peugeot-e208", **(defaults or {})}
+    return vol.Schema({
+        vol.Required(FIELD_BROKER_HOST, default=d.get(FIELD_BROKER_HOST, "")): str,
+        vol.Required(FIELD_BROKER_PORT, default=d[FIELD_BROKER_PORT]): int,
+        vol.Required(FIELD_BROKER_TLS, default=d.get(FIELD_BROKER_TLS, True)): bool,
+        vol.Required(FIELD_BROKER_PREFIX, default=d[FIELD_BROKER_PREFIX]): str,
+        vol.Required(FIELD_BROKER_USER, default=d.get(FIELD_BROKER_USER, "")): str,
+        vol.Optional(FIELD_BROKER_CA_FILE, default=d.get(FIELD_BROKER_CA_FILE, "")): str,
+        vol.Optional(FIELD_BROKER_CERT_FILE, default=d.get(FIELD_BROKER_CERT_FILE, "")): str,
+        vol.Optional(FIELD_BROKER_KEY_FILE, default=d.get(FIELD_BROKER_KEY_FILE, "")): str,
+        vol.Optional(FIELD_BROKER_PASSWORD, default=""): str,
+    })
 
 OAUTH_MANUAL_SCHEMA = vol.Schema({
     vol.Required(FIELD_OAUTH_CODE): str
@@ -137,6 +162,9 @@ class StellantisVehiclesConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="oauth_mode", data_schema=OAUTH_MODE_SCHEMA, errors=errors)
 
         await self.init_translations()
+        if user_input.get(FIELD_BROKER_MODE):
+            return await self.async_step_broker()
+
         self.stellantis = StellantisOauth(self.hass)
         self.stellantis.set_mobile_app(self.data[FIELD_MOBILE_APP], self.data[FIELD_COUNTRY_CODE])
 
@@ -280,6 +308,37 @@ class StellantisVehiclesConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_final()
         else:
             return await self.async_step_options()
+
+
+    async def async_step_broker(self, user_input=None):
+        """Broker mode: no Stellantis login; the vehicle comes from the poller's broker."""
+        if user_input is None:
+            errors = self.errors
+            self.errors = {}
+            return self.async_show_form(step_id="broker", data_schema=BROKER_SCHEMA(self.data), errors=errors)
+
+        user_input = {k: (v.strip() if isinstance(v, str) else v) for k, v in user_input.items()}
+        self.data.update(user_input)
+        self.data[FIELD_BROKER_MODE] = True
+        self.data[FIELD_REMOTE_COMMANDS] = True
+        # The unique id is built from customer_id: here the broker and topic prefix stand for it.
+        self.data["customer_id"] = f"broker-{user_input[FIELD_BROKER_HOST]}-{user_input[FIELD_BROKER_PREFIX]}"
+
+        from .broker import StellantisBrokerVehicles
+        broker = StellantisBrokerVehicles(self.hass)
+        broker.save_config(self.data)
+        try:
+            vehicles = await broker.get_user_vehicles()
+            if not vehicles:
+                raise ValueError("no vehicle on the broker")
+        except Exception as e:
+            _LOGGER.warning("Broker mode: test failed: %s", e)
+            self.errors = {"base": "broker_unreachable"}
+            return await self.async_step_broker()
+        finally:
+            await broker.async_shutdown()
+
+        return await self.async_step_options()
 
 
     async def async_step_options(self, user_input=None):

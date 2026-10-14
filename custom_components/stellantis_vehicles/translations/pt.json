@@ -22,6 +22,26 @@
           "sms_code": "Código SMS da Stellantis",
           "pin_code": "Código PIN do aplicativo móvel do veículo"
         }
+      },
+      "oauth_mode": {
+        "data": {
+          "broker_mode": "Usar um broker MQTT alimentado por um poller (sem login na Stellantis aqui)"
+        }
+      },
+      "broker": {
+        "title": "Broker MQTT",
+        "description": "O veículo é lido de um broker MQTT alimentado por um poller que tem a sessão da Stellantis. Os certificados são ficheiros neste Home Assistant (p. ex. /config/stellantis/client.crt); o utilizador MQTT é o nome com que o broker conhece este cliente (o CN do certificado).",
+        "data": {
+          "broker_host": "Servidor do broker",
+          "broker_port": "Porta",
+          "broker_prefix": "Prefixo dos tópicos",
+          "broker_user": "Utilizador MQTT (CN do certificado)",
+          "broker_ca_file": "Ficheiro da CA do broker (vazio: CA públicas)",
+          "broker_cert_file": "Ficheiro do certificado do cliente",
+          "broker_key_file": "Ficheiro da chave do cliente",
+          "broker_password": "Password (só sem certificado de cliente)",
+          "broker_tls": "Usar TLS"
+        }
       }
     },
     "error": {
@@ -32,7 +52,8 @@
       "get_mqtt_access_token": "Erro ao obter o token de acesso MQTT",
       "get_mqtt_access_token_nok_access": "Código SMS ou código PIN inválido",
       "get_mqtt_access_token_nok_maxnbtools": "Limite de dispositivos associados / SMS recebidos, redefina sua conta Stellantis e tente novamente",
-      "get_mqtt_access_token_nok_nok_blocked": "Limite de PIN incorreto usado, reinicie o processo de configuração"
+      "get_mqtt_access_token_nok_nok_blocked": "Limite de PIN incorreto usado, reinicie o processo de configuração",
+      "broker_unreachable": "Não foi possível ler o veículo do broker: verifique servidor, porta, certificados e se o poller está a publicar"
     },
     "abort": {
       "already_configured": "A conta já está configurada",

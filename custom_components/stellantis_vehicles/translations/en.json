@@ -14,7 +14,8 @@
       "oauth_mode": {
         "description": "To authenticate your account, a remote service is used that does not store your credentials in any way, alternatively you can use the manual method",
         "data": {
-          "oauth_manual_mode": "Use the manual method"
+          "oauth_manual_mode": "Use the manual method",
+          "broker_mode": "Use an MQTT broker fed by a poller (no Stellantis login here)"
         }
       },
       "oauth_remote": {
@@ -56,6 +57,21 @@
         "data": {
           "reconfigure": "Reconfigure"
         }
+      },
+      "broker": {
+        "title": "MQTT broker",
+        "description": "The vehicle is read from an MQTT broker fed by a poller that holds the Stellantis session. Certificate paths are files on this Home Assistant (e.g. /config/stellantis/client.crt); the MQTT user is the one the broker knows this client as (the client certificate's CN).",
+        "data": {
+          "broker_host": "Broker host",
+          "broker_port": "Port",
+          "broker_prefix": "Topic prefix",
+          "broker_user": "MQTT user (certificate CN)",
+          "broker_ca_file": "Broker CA file (empty: public CAs)",
+          "broker_cert_file": "Client certificate file",
+          "broker_key_file": "Client key file",
+          "broker_password": "Password (only without a client certificate)",
+          "broker_tls": "Use TLS"
+        }
       }
     },
     "error": {
@@ -69,7 +85,8 @@
       "get_mqtt_access_token_nok_maxnbtools": "Limit of associated devices / SMS received, reset your Stellantis account and try again",
       "get_mqtt_access_token_nok_nok_blocked": "Limit of wrong PIN used, restart the configuration process",
       "get_mqtt_access_token_rate_limit": "Rate limit of mqtt access token request exceeded (6 per day)",
-      "not_loaded": "Integration is not loaded yet, wait for setup to finish and try again"
+      "not_loaded": "Integration is not loaded yet, wait for setup to finish and try again",
+      "broker_unreachable": "Could not read the vehicle from the broker: check host, port, certificates and that the poller publishes"
     },
     "abort": {
       "already_configured": "Account is already configured",
