@@ -15,7 +15,6 @@ from .const import (
     SENSORS_DEFAULT,
     VEHICLE_TYPE_ELECTRIC,
     VEHICLE_TYPE_HYBRID,
-    MS_TO_KMH_CONVERSION,
     KWH_CORRECTION
 )
 
@@ -130,9 +129,16 @@ class StellantisLastTripSensor(StellantisRestoreSensor):
             attributes["duration"] = strftime("%H:%M:%S", gmtime(last_trip["duration"]))
         if "startMileage" in last_trip:
             attributes["start_mileage"] = str(last_trip["startMileage"]) + " " + UnitOfLength.KILOMETERS
+        # Average speed from distance and duration: kinetic.avgSpeed changed from
+        # m/s to km/h on 2026-10-22 (seen on 403 trips of an e-208), so a fixed
+        # conversion is wrong on one side of that date. avgSpeed only as a fallback.
+        if float(last_trip.get("distance") or 0) > 0 and float(last_trip.get("duration") or 0) > 0:
+            avg_speed_kmh = float(last_trip["distance"]) / (float(last_trip["duration"]) / 3600)
+            attributes["avg_speed"] = str(round(avg_speed_kmh, 2)) + " " + UnitOfSpeed.KILOMETERS_PER_HOUR
         if "kinetic" in last_trip:
-            if "avgSpeed" in last_trip["kinetic"] and float(last_trip["kinetic"]["avgSpeed"]) > 0:
-                avg_speed_kmh = float(last_trip["kinetic"]["avgSpeed"]) * MS_TO_KMH_CONVERSION
+            if ("avg_speed" not in attributes and "avgSpeed" in last_trip["kinetic"]
+                    and float(last_trip["kinetic"]["avgSpeed"]) > 0):
+                avg_speed_kmh = float(last_trip["kinetic"]["avgSpeed"])
                 attributes["avg_speed"] = str(round(avg_speed_kmh, 2)) + " " + UnitOfSpeed.KILOMETERS_PER_HOUR
             if "maxSpeed" in last_trip["kinetic"] and float(last_trip["kinetic"]["maxSpeed"]) > 0:
                 max_speed_kmh = float(last_trip["kinetic"]["maxSpeed"])
